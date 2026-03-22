@@ -30,6 +30,9 @@ ARG DATABASE_URL
 ENV PAYLOAD_SECRET=${PAYLOAD_SECRET}
 ENV DATABASE_URL=file:./build.db
 
+RUN corepack enable pnpm && pnpm payload migrate
+
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
