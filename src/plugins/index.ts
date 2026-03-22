@@ -9,6 +9,7 @@ import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { searchFields } from '@/search/fieldOverrides'
 import { beforeSyncWithSearch } from '@/search/beforeSync'
+import { s3Storage } from '@payloadcms/storage-s3'
 
 import { Page, Post } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -24,6 +25,30 @@ const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
 }
 
 export const plugins: Plugin[] = [
+  s3Storage({
+      enabled: Boolean(process.env.R2_BUCKET),
+      collections: {
+        media: {
+          disablePayloadAccessControl: true,
+          prefix: 'web',
+          generateFileURL: ({ filename, prefix }) => {
+            const key = prefix ? `${prefix}/${filename}` : filename
+            return `${process.env.R2_PUBLIC_URL}/${key}`
+          },
+        },
+      },
+      bucket: process.env.R2_BUCKET || '',
+      config: {
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+        },
+        region: 'auto',
+        // R2 S3 API endpoint — for uploads only, not for serving files
+        endpoint: process.env.R2_ENDPOINT,
+        forcePathStyle: true,
+      },
+    }),
   redirectsPlugin({
     collections: ['pages', 'posts'],
     overrides: {
